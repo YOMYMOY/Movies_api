@@ -1,5 +1,5 @@
 const router = require('express').Router();
-const {list, detail, store, update, destroy} = require('../../controllers/actorsController');
+const {list, detail, store, update, destroy, actorMovies} = require('../../controllers/actorsController');
 const actorsValidator = require('../../validations/actorsValidator');
 
 /* /actors */
@@ -9,6 +9,7 @@ router
     .post('/', actorsValidator, store)
     .put('/:id', update)
     .delete('/:id', destroy)
+    .get('/:id/movies', actorMovies)
 
 
 module.exports = router;

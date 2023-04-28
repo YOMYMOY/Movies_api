@@ -1,5 +1,5 @@
 const router = require('express').Router();
-const {list, detail, store, update, destroy} = require('../../controllers/genresController');
+const {list, detail, store, update, destroy, genreMovies} = require('../../controllers/genresController');
 const genresValidator = require('../../validations/genresValidator');
 
 
@@ -10,6 +10,7 @@ router
     .post('/', genresValidator, store)
     .put('/:id', update)
     .delete('/:id', destroy)
+    .get('/:id/movies', genreMovies)
 
 
 module.exports = router;

@@ -1,5 +1,5 @@
 const createResponseError = require('../helpers/createResponseError');
-const { getAllActors, getOneActor, createActor, updateActor, destroyActor } = require('../services/actorsServices');
+const { getAllActors, getOneActor, createActor, updateActor, destroyActor, getMoviesByActor } = require('../services/actorsServices');
 const { validationResult } = require('express-validator');
 
 module.exports = {
@@ -106,5 +106,24 @@ module.exports = {
             return createResponseError(res,error);
         }
     },
+    actorMovies : async (req,res) => {
+        try {
+            const {
+                params : {id}
+            } = req;
 
+            const moviesByActor = await getMoviesByActor(id);
+            return res.status(200).json({
+                ok : true,
+                meta : {
+                    status : 200,
+                    total : moviesByActor.movies.length,
+                    url : `/api/v1/actors/${id}/movies`
+                },
+                data : moviesByActor
+            })
+        } catch (error) {
+            return createResponseError(res,error);
+        }
+    }
 }

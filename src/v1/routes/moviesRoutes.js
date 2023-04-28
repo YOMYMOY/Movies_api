@@ -14,6 +14,6 @@ router
     .post('/', moviesValidator, store)
     .put('/:id', update)
     .delete('/:id', destroy)
-    .put('/restore/:id', restore)
+    /* .put('/restore/:id', restore) */
 
 module.exports = router;

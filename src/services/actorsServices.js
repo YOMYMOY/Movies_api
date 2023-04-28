@@ -67,5 +67,18 @@ module.exports = {
                 message : error.message
             }
         }
+    },
+    getMoviesByActor : async (id) => {
+        try {
+            const actor = await db.Actor.findByPk(id, {
+                include : ['movies']
+            });
+            return actor;
+        } catch (error) {
+            throw {
+                status : 500,
+                message : error.message
+            }
+        }
     }
 }

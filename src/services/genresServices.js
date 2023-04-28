@@ -72,5 +72,18 @@ module.exports = {
                 message : error.message
             }
         }
+    },
+    getMoviesByGenre : async (id) => {
+        try {
+            const genre = await db.Genre.findByPk(id, {
+                include : ['movies']
+            });
+            return genre;
+        } catch (error) {
+            throw {
+                status : 500,
+                message : error.message
+            }
+        }
     }
 }

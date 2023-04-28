@@ -1,6 +1,6 @@
 const { validationResult } = require('express-validator');
 const createResponseError = require('../helpers/createResponseError');
-const { getAllGenres, getOneGenre, createGenre, destroyGenre, updateGenre } = require('../services/genresServices');
+const { getAllGenres, getOneGenre, createGenre, destroyGenre, updateGenre, getMoviesByGenre } = require('../services/genresServices');
 
 module.exports = {
     list: async (req, res) => {
@@ -124,5 +124,24 @@ module.exports = {
             return createResponseError(res,error);
         }
     },
+    genreMovies : async (req,res) => {
+        try {
+            const {
+                params : {id}
+            } = req;
 
+            const moviesByGenre = await getMoviesByGenre(id);
+            return res.status(200).json({
+                ok : true,
+                meta : {
+                    status : 200,
+                    total : moviesByGenre.movies.length,
+                    url : `/api/v1/genres/${id}/movies`
+                },
+                data : moviesByGenre
+            });
+        } catch (error) {
+            return createResponseError(res,error);
+        }
+    }
 }
