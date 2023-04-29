@@ -1,187 +1,164 @@
+const path = require('path');
 const db = require('../database/models');
-const { getAllMovies, getOneMovie, createMovie, getNewestMovies, getRecommendedMovies, updateMovie, destroyMovie, restoreMovie } = require('../services/moviesServices');
-const createResponseError = require('../helpers/createResponseError');
-const { validationResult } = require('express-validator');
+const sequelize = db.sequelize;
+const { Op } = require("sequelize");
+const moment = require('moment');
+const fetch = require('node-fetch');
+const { error } = require('console');
+const { searchMovie } = require('../services/moviesServices');
 
-module.exports = {
-    list: async (req, res) => {
 
-        try {
+//Aqui tienen otra forma de llamar a cada uno de los modelos
+const Movies = db.Movie;
+const Genres = db.Genre;
+const Actors = db.Actor;
+const API = 'http://www.omdbapi.com/?apikey=d4e35e92';
 
-            const movies = await getAllMovies();
-
-            return res.status(200).json({
-                ok : true,
-                meta : {
-                    status : 200,
-                    total : movies.length,
-                    url : '/api/v1/movies'
-                },
-                data : movies
+const moviesController = {
+    'list': (req, res) => {
+        db.Movie.findAll({
+            include: ['genre']
+        })
+            .then(movies => {
+                res.render('moviesList.ejs', {movies})
             })
-
-        } catch (error) {
-            return createResponseError(res,error);
-        }
-
     },
-    detail: async (req, res) => {
-
-        try {
-
-            const {
-                params : {id}
-            } = req;
-
-            const movie = await getOneMovie(id);
-
-            return res.status(200).json({
-                ok : true,
-                meta : {
-                    status : 200,
-                    total : 1,
-                    url : `/api/v1/movies/${id}`
-                },
-                data : movie
+    'detail': (req, res) => {
+        db.Movie.findByPk(req.params.id,
+            {
+                include : ['genre']
             })
-
-        } catch (error) {
-            return createResponseError(res,error);
-        }
-
+            .then(movie => {
+                res.render('moviesDetail.ejs', {movie});
+            });
     },
-    newest: async (req, res) => {
-
-        try {
-
-            const newestMovies = await getNewestMovies();
-
-            return res.status(200).json({
-                ok : true,
-                meta : {
-                    status : 200,
-                    total : newestMovies.length,
-                    url : `/api/v1/movies/newest`
-                },
-                data : newestMovies
-            })
-
-        } catch (error) {
-            return createResponseError(res,error);
-        }
-
+    'new': (req, res) => {
+        db.Movie.findAll({
+            order : [
+                ['release_date', 'DESC']
+            ],
+            limit: 5
+        })
+            .then(movies => {
+                res.render('newestMovies', {movies});
+            });
     },
-    recommended: async (req, res) => {
-
-        try {
-
-            const recommendedMovies = await getRecommendedMovies();
-
-            return res.status(200).json({
-                ok : true,
-                meta : {
-                    status : 200,
-                    total : recommendedMovies.length,
-                    url : `/api/v1/movies/recomended`
-                },
-                data : recommendedMovies
+    'recomended': (req, res) => {
+        db.Movie.findAll({
+            include: ['genre'],
+            where: {
+                rating: {[db.Sequelize.Op.gte] : 8}
+            },
+            order: [
+                ['rating', 'DESC']
+            ]
+        })
+            .then(movies => {
+                res.render('recommendedMovies.ejs', {movies});
+            });
+    },
+    //Aqui debo modificar para crear la funcionalidad requerida
+    /* 'buscar': (req, res) => {
+        const url = "http://www.omdbapi.com/";
+        const apikey = "1b42686d";
+        const keyword = req.body.titulo;
+        
+        fetch(`${url}?apiKey=${apikey}&t=${keyword}`)
+            .then(response => {
+                return response.json();
             })
+            .then(movie => {
+                return res.send(movie);
+            })
+            .catch(error => console.log(error));
+        
+    }, */
+    buscar : async (req,res) => {
+        try {
+            const keyword = req.body.titulo;
+            const result = await searchMovie(keyword);
 
-        } catch (error) {
-            return createResponseError(res,error);
+            return res.render('moviesDetailOmdb', {
+                movie : result
+            });
+        } catch {
+            console.log(error);
         }
-
     },
     //Aqui dispongo las rutas para trabajar con el CRUD
-    store: async (req,res) => {
-       
-        try {
-            const errors = validationResult(req);
-            if(!errors.isEmpty()) throw {
-                status : 400,
-                message : errors.mapped()
-            }
-            const newMovie = await createMovie(req.body);
-            return res.status(200).json({
-                ok: true,
-                meta: {
-                    status: 200,
-                    total: 1,
-                    url: `/api/v1/movies/${newMovie.id}`
-                },
-                data: newMovie
-            });
-        } catch (error) {
-            return createResponseError(res,error);
-        }
-    },
-    update: async (req,res) => {
-
-        try {
-            
-            const {
-                params : {id}
-            } = req;
-
-            const updatedMovie = await updateMovie(id, req.body);
-            return res.status(200).json({
-                ok: true,
-                meta: {
-                    status: 200,
-                    total: 1,
-                    url: `/api/v1/movies/${updatedMovie.id}`
-                },
-                data: updatedMovie
-            });
-
-        } catch (error) {
-            return createResponseError(res,error);
-        }
-    },
-    destroy: async (req,res) => {
+    add: function (req, res) {
+        let promGenres = Genres.findAll();
+        let promActors = Actors.findAll();
         
-        try {
-            
-            const {
-                params : {id}
-            } = req;
-
-            const destroyedMovie = await destroyMovie(id);
-            return res.status(200).json({
-                ok: true,
-                meta: {
-                    status: 200,
-                    total: 1,
-                    url: `/api/v1/movies/${id}`
-                },
-                data: destroyedMovie
-            });
-
-        } catch (error) {
-            return createResponseError(res,error);
-        }
+        Promise
+        .all([promGenres, promActors])
+        .then(([allGenres, allActors]) => {
+            return res.render(path.resolve(__dirname, '..', 'views',  'moviesAdd'), {allGenres,allActors})})
+        .catch(error => res.send(error))
     },
-    restore: async (req,res) => {
-
-        try {
-            
-            const {
-                params : {id}
-            } = req;
-
-            const restoredMovie = await restoreMovie(id);
-            return res.status(200).json({
-                ok: true,
-                meta: {
-                    status: 200,
-                    total: 1,
-                    url: `/api/v1/movies/${id}`
-                },
-                data: restoredMovie
-            });
-
-        } catch (error) {
-            return createResponseError(res,error);
-        }
+    create: function (req,res) {
+        Movies
+        .create(
+            {
+                title: req.body.title,
+                rating: req.body.rating,
+                awards: req.body.awards,
+                release_date: req.body.release_date,
+                length: req.body.length,
+                genre_id: req.body.genre_id
+            }
+        )
+        .then(()=> {
+            return res.redirect('/movies')})            
+        .catch(error => res.send(error))
+    },
+    edit: function(req,res) {
+        let movieId = req.params.id;
+        let promMovies = Movies.findByPk(movieId,{include: ['genre','actors']});
+        let promGenres = Genres.findAll();
+        let promActors = Actors.findAll();
+        Promise
+        .all([promMovies, promGenres, promActors])
+        .then(([Movie, allGenres, allActors]) => {
+            Movie.release_date = moment(Movie.release_date).format('L');
+            return res.render(path.resolve(__dirname, '..', 'views',  'moviesEdit'), {Movie,allGenres,allActors})})
+        .catch(error => res.send(error))
+    },
+    update: function (req,res) {
+        let movieId = req.params.id;
+        Movies
+        .update(
+            {
+                title: req.body.title,
+                rating: req.body.rating,
+                awards: req.body.awards,
+                release_date: req.body.release_date,
+                length: req.body.length,
+                genre_id: req.body.genre_id
+            },
+            {
+                where: {id: movieId}
+            })
+        .then(()=> {
+            return res.redirect('/movies')})            
+        .catch(error => res.send(error))
+    },
+    delete: function (req,res) {
+        let movieId = req.params.id;
+        Movies
+        .findByPk(movieId)
+        .then(Movie => {
+            return res.render(path.resolve(__dirname, '..', 'views',  'moviesDelete'), {Movie})})
+        .catch(error => res.send(error))
+    },
+    destroy: function (req,res) {
+        let movieId = req.params.id;
+        Movies
+        .destroy({where: {id: movieId}, force: true}) // force: true es para asegurar que se ejecute la acción
+        .then(()=>{
+            return res.redirect('/movies')})
+        .catch(error => res.send(error)) 
     }
 }
+
+module.exports = moviesController;

@@ -19,14 +19,20 @@ app.use(methodOverride('_method'));
 
 
 //routes
-
-const { actorsRouter, genresRouter, moviesRouter } = require('./v1/routes');
+const indexRouter = require('./v1/routes/index');
+const moviesRoutes = require('./v1/routes/moviesRoutes');
+const genresRoutes = require('./v1/routes/genresRoutes');
+const { actorsApiRouter, genresApiRouter, moviesApiRouter } = require('./v1/routes/indexApi');
 const createResponseError = require('./helpers/createResponseError');
 
 app
-    .use('/api/v1/actors', actorsRouter)
-    .use('/api/v1/genres', genresRouter)
-    .use('/api/v1/movies', moviesRouter);
+    .use('/api/v1/actors', actorsApiRouter)
+    .use('/api/v1/genres', genresApiRouter)
+    .use('/api/v1/movies', moviesApiRouter)
+
+    .use('/', indexRouter)
+    .use(moviesRoutes)
+    .use(genresRoutes)
 
 //catch 404 and forward to error handler
 app.use(function(req,res,next){

@@ -1,5 +1,9 @@
-module.exports = {
-  actorsRouter : require('./actorsRoutes'),
-  genresRouter : require('./genresRoutes'),
-  moviesRouter : require('./moviesRoutes')
-}
+var express = require('express');
+var router = express.Router();
+
+/* GET home page. */
+router.get('/', function(req, res, next) {
+  res.render('index', { title: 'Digital Movies' });
+});
+
+module.exports = router;

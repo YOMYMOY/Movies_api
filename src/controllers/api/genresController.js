@@ -1,127 +1,145 @@
-const createResponseError = require('../helpers/createResponseError');
-const { getAllActors, getOneActor, createActor, updateActor, destroyActor, getMoviesByActor } = require('../services/actorsServices');
 const { validationResult } = require('express-validator');
+const createResponseError = require('../../helpers/createResponseError');
+const { getAllGenres, getOneGenre, createGenre, destroyGenre, updateGenre, getMoviesByGenre } = require('../../services/genresServices');
 
 module.exports = {
     list: async (req, res) => {
 
         try {
-            const actors = await getAllActors();
+
+            const genres = await getAllGenres();
+
             return res.status(200).json({
-                ok : true,
-                meta : {
-                    status : 200,
-                    total : actors.length,
-                    url : '/api/v1/actors'
+                ok: true,
+                meta: {
+                    status: 200,
+                    //total : genres.length,
+                    url: '/api/v1/genres'
                 },
-                data : actors
+                data: genres
             })
         } catch (error) {
-            return createResponseError(res,error);
+            return createResponseError(res, error);
         }
-        
+
     },
     detail: async (req, res) => {
 
         try {
+
             const {
-                params : {id}
+                params: {
+                    id
+                }
             } = req;
 
-            const actor = await getOneActor(id);
+            const genre = await getOneGenre(id);
 
             return res.status(200).json({
-                ok : true,
-                meta : {
-                    status : 200,
-                    total : 1,
-                    url : `/api/v1/actors/${id}`
+                ok: true,
+                meta: {
+                    status: 200,
+                    total: 1,
+                    url: `/api/v1/genres/${id}`
                 },
-                data : actor
-            });
-            
+                data: genre
+            })
+
         } catch (error) {
-            return createResponseError(res,error);
+            return createResponseError(res, error);
         }
-        
+
     },
-    store : async (req,res) => {
+    store: async (req, res) => {
+
         try {
+
             const errors = validationResult(req);
+
             if(!errors.isEmpty()) throw {
                 status : 400,
                 message : errors.mapped()
             }
-            const newActor = await createActor(req.body);
+
+            const newGenre = await createGenre(req.body);
+
             return res.status(200).json({
                 ok: true,
                 meta: {
                     status: 200,
                     total: 1,
-                    url: `/api/v1/actors/${newActor.id}`
+                    url: `/api/genres/${newGenre.id}`
                 },
-                data: newActor
+                data: newGenre
             });
+
         } catch (error) {
-            return createResponseError(res,error);
+            return createResponseError(res, error);
         }
+
     },
-    update : async (req,res) => {
+    update: async (req, res) => {
+
         try {
+            
             const {
                 params : {id}
             } = req;
 
-            const updatedActor = await updateActor(id, req.body);
+            const updatedGenre = await updateGenre(id, req.body);
             return res.status(200).json({
                 ok: true,
                 meta: {
                     status: 200,
                     total: 1,
-                    url: `/api/v1/actors/${id}`
+                    url: `/api/v1/genres/${updatedGenre.id}`
                 },
-                data : updatedActor,
+                data: updatedGenre
             });
+
         } catch (error) {
             return createResponseError(res,error);
         }
     },
-    destroy : async (req,res) => {
+    destroy: async (req, res) => {
+ 
         try {
+            
             const {
                 params : {id}
             } = req;
 
-            const destroyedActor = await destroyActor(id);
+            const destroyedGenre = await destroyGenre(id);
             return res.status(200).json({
                 ok: true,
                 meta: {
                     status: 200,
                     total: 1,
-                    message : "Eliminado con éxito."
+                    url: `/api/v1/genres/${id}`
                 },
-                data: destroyedActor
+                data: destroyedGenre
             });
+
         } catch (error) {
             return createResponseError(res,error);
         }
     },
-    actorMovies : async (req,res) => {
+    genreMovies : async (req,res) => {
         try {
             const {
                 params : {id}
             } = req;
 
-            const moviesByActor = await getMoviesByActor(id);
+            const moviesByGenre = await getMoviesByGenre(id);
             return res.status(200).json({
                 ok : true,
                 meta : {
                     status : 200,
-                    total : moviesByActor.movies.length,
-                    url : `/api/v1/actors/${id}/movies`
+                    total : moviesByGenre.movies.length,
+                    url : `/api/v1/genres/${id}/movies`
                 },
-                data : moviesByActor
-            })
+                data : moviesByGenre
+            });
         } catch (error) {
             return createResponseError(res,error);
         }

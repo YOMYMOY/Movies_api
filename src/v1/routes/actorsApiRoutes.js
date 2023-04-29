@@ -1,5 +1,5 @@
 const router = require('express').Router();
-const {list, detail, store, update, destroy, actorMovies} = require('../../controllers/actorsController');
+const {list, detail, store, update, destroy, actorMovies} = require('../../controllers/api/actorsController');
 const actorsValidator = require('../../validations/actorsValidator');
 
 /* /actors */

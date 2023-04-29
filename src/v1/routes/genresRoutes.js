@@ -1,16 +1,9 @@
-const router = require('express').Router();
-const {list, detail, store, update, destroy, genreMovies} = require('../../controllers/genresController');
-const genresValidator = require('../../validations/genresValidator');
+const express = require('express');
+const router = express.Router();
+const genresController = require('../../controllers/genresController');
 
-
-/* /api/v1/genres */
-router
-    .get('/', list)
-    .get('/:id', detail)
-    .post('/', genresValidator, store)
-    .put('/:id', update)
-    .delete('/:id', destroy)
-    .get('/:id/movies', genreMovies)
+router.get('/genres', genresController.list);
+router.get('/genres/detail/:id', genresController.detail);
 
 
 module.exports = router;
